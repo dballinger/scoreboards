@@ -20,8 +20,8 @@ class Scoreboards(columnNameResolver: ColumnNamesResolver,
     }
 
     val driver = nextPage(new HtmlUnitDriver(DesiredCapabilities.firefox()))
-    val pageData = extract(Nil, driver)
     val columnNames = driver map columnNameResolver
+    val pageData = extract(Nil, driver)
 
     collector(columnNames.getOrElse(Nil), sort(pageData))
   }
@@ -30,7 +30,7 @@ class Scoreboards(columnNameResolver: ColumnNamesResolver,
 object Scoreboards {
   type ColumnNames = List[String]
   type PageData = List[Row]
-  type Row = List[String]
+  type Row = Map[String, String]
   type ColumnNamesResolver = (WebDriver) => ColumnNames
   type PageDataResolver = (WebDriver) => PageData
   type NextPage = (WebDriver) => Option[WebDriver]

@@ -14,12 +14,12 @@ class ScoreboardsTest extends FlatSpec with Matchers {
     scoreboards.collect()
 
     actualNames shouldBe List("a", "b", "c")
-    actualData shouldBe List(
+    actualData shouldBe indexColumns(List(
       List("1", "a", "3"),
       List("10", "b", "12"),
       List("7", "c", "9"),
       List("4", "d", "6")
-    )
+    ))(actualNames)
   }
 
   it should "use a web driver with javascript capabilities capabilities" in new JsNavFixture {
@@ -43,17 +43,25 @@ class ScoreboardsTest extends FlatSpec with Matchers {
     var actualNames: ColumnNames = _
     var actualData: PageData = _
 
-    val columnNamesResolver: ColumnNamesResolver = { driver => List("a", "b", "c") }
+    val columnNames = List("a", "b", "c")
+    val columnNamesResolver: ColumnNamesResolver = { driver => columnNames }
 
     val pageDataResolver: PageDataResolver = {
       driver =>
-        val pageData = List(
-          List("1", "a", "3"),
-          List("4", "d", "6"),
-          List("7", "c", "9"),
-          List("10", "b", "12")
+        val pageData = indexColumns(
+          List(
+            List("1", "a", "3"),
+            List("4", "d", "6"),
+            List("7", "c", "9"),
+            List("10", "b", "12")
+          )
+
+        )(columnNames)
+
+        pageData.slice(
+          currentPage * pageSize,
+          currentPage * pageSize + currentPage + pageSize
         )
-        pageData.drop(currentPage * pageSize).take(currentPage + pageSize)
     }
 
     val nextPage: NextPage = {
@@ -66,7 +74,7 @@ class ScoreboardsTest extends FlatSpec with Matchers {
 
     val sorter: Sorter = {
       pageData =>
-        pageData.sortBy(_(sortColumn))
+        pageData.sortBy(_ (columnNames(sortColumn)))
     }
 
     val collector: Collector = {
@@ -89,4 +97,11 @@ class ScoreboardsTest extends FlatSpec with Matchers {
     }
   }
 
+  val indexColumns: List[List[String]] => List[String] => List[Map[String, String]] = {
+    rows: List[List[String]] =>
+      columnNames: List[String] =>
+        for {
+          row <- rows
+        } yield columnNames.zip(row).toMap
+  }
 }
